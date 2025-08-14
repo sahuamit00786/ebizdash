@@ -1,0 +1,9 @@
+vendor_category,vendor_subcategory_1,vendor_subcategory_2,vendor_subcategory_3,vendor_subcategory_4,sku,name,description
+Electronics,Smartphones,Android,Flagship,New Premium,PHONE001,iPhone 15 Pro,Latest flagship smartphone
+Electronics,Smartphones,Android,Flagship,New Premium,PHONE002,Samsung Galaxy S24,Android flagship device
+Electronics,Smartphones,Android,Flagship,New Premium,PHONE003,Google Pixel 8 Pro,Premium Android experience
+Electronics,Smartphones,iOS,Flagship,New Premium,PHONE004,iPhone 15 Pro Max,Ultimate iOS device
+Electronics,Smartphones,iOS,Flagship,New Premium,PHONE005,iPhone 14 Pro,Previous generation flagship
+Electronics,Laptops,Windows,Gaming,High Performance,LAPTOP001,Alienware X17,Gaming laptop
+Electronics,Laptops,Windows,Business,Professional,LAPTOP002,Dell Latitude,Business laptop
+Electronics,Laptops,MacOS,Creative,Studio,LAPTOP003,MacBook Pro 16,Creative professional laptop

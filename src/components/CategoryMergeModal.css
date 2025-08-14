@@ -1,0 +1,280 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.merge-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #1a1a1a;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.merge-description {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.merge-description p {
+  margin: 0;
+  color: #495057;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.category-selection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.category-option {
+  flex: 1;
+}
+
+.category-option input[type="radio"] {
+  display: none;
+}
+
+.category-card {
+  display: block;
+  padding: 20px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  position: relative;
+}
+
+.category-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
+.category-option input[type="radio"]:checked + .category-card {
+  border-color: #007bff;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.2);
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.category-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.category-type {
+  font-size: 12px;
+  color: #007bff;
+  background: #e3f2fd;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.category-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-path {
+  font-size: 13px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.category-products {
+  font-size: 14px;
+  color: #28a745;
+  font-weight: 600;
+}
+
+.selected-indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #28a745;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.merge-arrow {
+  font-size: 24px;
+  color: #6c757d;
+  font-weight: bold;
+  padding: 0 8px;
+}
+
+.merge-summary {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.merge-summary h4 {
+  margin: 0 0 12px 0;
+  color: #856404;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.merge-summary ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #856404;
+  font-size: 13px;
+}
+
+.merge-summary li {
+  margin-bottom: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 24px 24px;
+  border-top: 1px solid #e9ecef;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .merge-modal {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .category-selection {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .merge-arrow {
+    transform: rotate(90deg);
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}

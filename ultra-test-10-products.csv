@@ -1,0 +1,11 @@
+sku,name,description,price,cost,stock_quantity,vendor_category,vendor_subcategory_1,vendor_subcategory_2
+PROD-000001,Test Product 1 - Electronics,High quality electronics product with advanced features,99.99,50.00,100,Electronics,Smartphones,Android
+PROD-000002,Test Product 2 - Clothing,Comfortable and stylish clothing item,149.99,75.00,50,Clothing,Men,Shirts
+PROD-000003,Test Product 3 - Home & Garden,Beautiful home decoration piece,79.99,40.00,25,Home & Garden,Furniture,Living Room
+PROD-000004,Test Product 4 - Sports & Outdoors,Professional sports equipment for outdoor activities,199.99,100.00,30,Sports & Outdoors,Fitness,Cardio
+PROD-000005,Test Product 5 - Books & Media,Educational book with comprehensive content,29.99,15.00,200,Books & Media,Educational,Science
+PROD-000006,Test Product 6 - Automotive,High-performance automotive part,299.99,150.00,15,Automotive,Car Parts,Engine
+PROD-000007,Test Product 7 - Health & Beauty,Premium skincare product for all skin types,59.99,30.00,75,Health & Beauty,Skincare,Anti-Aging
+PROD-000008,Test Product 8 - Toys & Games,Fun and educational toy for children,39.99,20.00,100,Toys & Games,Educational,STEM
+PROD-000009,Test Product 9 - Food & Beverages,Organic and healthy food product,19.99,10.00,150,Food & Beverages,Organic,Snacks
+PROD-000010,Test Product 10 - Tools & Hardware,Professional grade tool for construction,89.99,45.00,40,Tools & Hardware,Power Tools,Drills

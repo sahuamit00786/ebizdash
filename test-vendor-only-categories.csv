@@ -1,0 +1,11 @@
+sku,name,description,brand,stock,list_price,vendor_category,vendor_subcategory_1,vendor_subcategory_2,vendor_subcategory_3
+V001,Wireless Mouse,High-quality wireless mouse,Logitech,50,29.99,Electronics,Computer Accessories,Input Devices,Mice
+V002,Mechanical Keyboard,RGB mechanical gaming keyboard,Razer,30,149.99,Electronics,Computer Accessories,Input Devices,Keyboards
+V003,USB Cable,High-speed USB 3.0 cable,Belkin,100,12.99,Electronics,Computer Accessories,Cables,USB
+V004,Gaming Headset,7.1 surround sound gaming headset,SteelSeries,25,89.99,Electronics,Computer Accessories,Audio,Headsets
+V005,Monitor Stand,Adjustable monitor stand,Ergotron,15,199.99,Electronics,Computer Accessories,Displays,Stands
+V006,Webcam,4K webcam for streaming,Logitech,40,129.99,Electronics,Computer Accessories,Video,Webcams
+V007,External SSD,1TB portable SSD,Samsung,20,89.99,Electronics,Storage,External Drives,SSD
+V008,Network Switch,8-port gigabit switch,TP-Link,10,45.99,Electronics,Networking,Switches,Gigabit
+V009,Power Supply,750W modular power supply,Corsair,12,129.99,Electronics,Computer Parts,Power Supplies,Modular
+V010,CPU Cooler,Liquid CPU cooler,NZXT,8,89.99,Electronics,Computer Parts,Cooling,Liquid

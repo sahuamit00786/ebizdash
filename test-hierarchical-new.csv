@@ -1,0 +1,6 @@
+sku,name,description,brand,stock,list_price,category_hierarchy
+PROD001,Sample Product 1,This is a sample product,Brand A,100,199.99,"Electronics > Mobile Devices > Smartphones > Premium"
+PROD002,Sample Product 2,Another sample product,Brand B,50,299.99,"Computers > Laptops > Gaming > High-End"
+PROD003,Sample Product 3,Third sample product,Brand C,75,149.99,"Home & Garden > Kitchen > Appliances > Small Appliances"
+PROD004,Sample Product 4,Fourth sample product,Brand D,25,399.99,"Sports & Outdoors > Fitness > Equipment > Cardio"
+PROD005,Sample Product 5,Fifth sample product,Brand E,200,89.99,"Clothing > Men > Shirts > Casual"

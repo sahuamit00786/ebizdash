@@ -1,0 +1,32 @@
+.user-modal {
+  width: 500px;
+}
+
+.user-form {
+  padding: 20px;
+}
+
+.permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.permission-item input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .user-modal {
+    width: 95vw;
+  }
+}

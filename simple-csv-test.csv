@@ -1,0 +1,3 @@
+sku,name,description,category_hierarchy
+TEST001,Test Product 1,Simple test product,"Electronics > Smartphones"
+TEST002,Test Product 2,Another test product,"Electronics > Laptops"

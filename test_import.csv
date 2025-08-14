@@ -1,0 +1,3 @@
+sku,name,description,description2,brand,stock,list_price
+TEST001,Test Product 1,Main description,Secondary description,Brand A,10,29.99
+TEST002,Test Product 2,Main description,Secondary description,Brand B,5,19.99

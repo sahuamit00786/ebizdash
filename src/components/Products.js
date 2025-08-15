@@ -17,6 +17,7 @@ const AVAILABLE_COLUMNS = {
   id: { label: "ID", type: "number", width: "w-12" },
   sku: { label: "SKU", type: "text", width: "w-20" },
   name: { label: "Product Name", type: "text", width: "w-64" },
+  image_url: { label: "Image URL", type: "text", width: "w-48" },
   short_description: { label: "Short Description", type: "text", width: "w-80" },
   description: { label: "Description", type: "text", width: "w-96" },
   brand: { label: "Brand", type: "text", width: "w-24" },
@@ -27,7 +28,7 @@ const AVAILABLE_COLUMNS = {
   vendor_cost: { label: "Cost", type: "currency", width: "w-24" },
   special_price: { label: "Special", type: "currency", width: "w-24" },
   weight: { label: "Weight", type: "number", width: "w-20" },
-  dimensions: { label: "Dimensions", type: "dimensions", width: "w-32" },
+  dimensions: { label: "Dimensions (L×B×H)", type: "dimensions", width: "w-40" },
   length: { label: "Length", type: "number", width: "w-20" },
   width: { label: "Width", type: "number", width: "w-20" },
   height: { label: "Height", type: "number", width: "w-20" },
@@ -1287,6 +1288,22 @@ const Products = () => {
             </div>
           </div>
         )
+      case "image_url":
+        return (
+          <div className="flex items-center space-x-2">
+            <img
+              src={value || "/placeholder.jpg"}
+              alt="Product"
+              className="h-8 w-8 rounded object-cover border border-gray-200"
+              onError={(e) => {
+                e.target.src = "/placeholder.jpg"
+              }}
+            />
+            <div className="text-sm text-gray-900 max-w-xs truncate" title={value}>
+              {value ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : "-"}
+            </div>
+          </div>
+        )
       case "short_description":
         return (
           <div className="text-sm text-gray-900 max-w-xs" title={value}>
@@ -1310,7 +1327,7 @@ const Products = () => {
         }
         
         return (
-          <div className="text-sm text-gray-900" title={`L: ${length} × W: ${width} × H: ${height}`}>
+          <div className="text-sm text-gray-900" title={`Length: ${length} × Breadth: ${width} × Height: ${height}`}>
             {length} × {width} × {height}
           </div>
         )
@@ -1989,18 +2006,18 @@ const Products = () => {
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </th>
-                      {activeColumns.map(([key, config]) => {
-                        // Special handling for dimensions columns
-                        if (key === 'length' || key === 'width' || key === 'height') {
-                          return null;
-                        }
-                        if (key === 'dimensions') {
-                          return (
-                            <th key={key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colSpan={3}>
-                              {config.label}
-                            </th>
-                          );
-                        }
+                                             {activeColumns.map(([key, config]) => {
+                         // Special handling for dimensions columns
+                         if (key === 'length' || key === 'width' || key === 'height') {
+                           return null;
+                         }
+                         if (key === 'dimensions') {
+                           return (
+                             <th key={key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                               {config.label}
+                             </th>
+                           );
+                         }
                         if (key === 'categories_display') {
                           return (
                             <th key={key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -2026,30 +2043,24 @@ const Products = () => {
                         );
                       })}
                     </tr>
-                    <tr className="bg-gray-50">
-                      <th className="px-6 py-2"></th>
-                      {activeColumns.map(([key, config]) => {
-                        // Show sub-headers for dimensions
-                        if (key === 'length' || key === 'width' || key === 'height') {
-                          return (
-                            <React.Fragment key={`dimensions-sub-${key}`}>
-                              <th className="px-3 py-2 text-xs font-medium text-gray-500 uppercase">L</th>
-                              <th className="px-3 py-2 text-xs font-medium text-gray-500 uppercase">W</th>
-                              <th className="px-3 py-2 text-xs font-medium text-gray-500 uppercase">H</th>
-                            </React.Fragment>
-                          );
-                        }
-                        if (key === 'categories_display') {
-                          return (
-                            <React.Fragment key={`categories-sub-${key}`}>
-                              <th className="px-3 py-2 text-xs font-medium text-gray-500 uppercase">Vendor Cat</th>
-                              <th className="px-3 py-2 text-xs font-medium text-gray-500 uppercase">Store Cat</th>
-                            </React.Fragment>
-                          );
-                        }
-                        return <th key={key} className="px-6 py-2"></th>;
-                      })}
-                    </tr>
+                                         <tr className="bg-gray-50">
+                       <th className="px-6 py-2"></th>
+                       {activeColumns.map(([key, config]) => {
+                         // Show sub-headers for categories only
+                         if (key === 'length' || key === 'width' || key === 'height') {
+                           return null;
+                         }
+                         if (key === 'categories_display') {
+                           return (
+                             <React.Fragment key={`categories-sub-${key}`}>
+                               <th className="px-3 py-2 text-xs font-medium text-gray-500 uppercase">Vendor Cat</th>
+                               <th className="px-3 py-2 text-xs font-medium text-gray-500 uppercase">Store Cat</th>
+                             </React.Fragment>
+                           );
+                         }
+                         return <th key={key} className="px-6 py-2"></th>;
+                       })}
+                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sortedProducts.map((product) => (
@@ -2067,26 +2078,18 @@ const Products = () => {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-                        {activeColumns.map(([key, config]) => {
-                          // Special handling for dimensions columns
-                          if (key === 'length' || key === 'width' || key === 'height') {
-                            return null;
-                          }
-                          if (key === 'dimensions') {
-                            return (
-                              <React.Fragment key={`dimensions-cells-${key}`}>
-                                                              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 h-16">
-                                {formatCellValue(product.length, 'number')}
-                              </td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 h-16">
-                                {formatCellValue(product.width, 'number')}
-                              </td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 h-16">
-                                {formatCellValue(product.height, 'number')}
-                              </td>
-                              </React.Fragment>
-                            );
-                          }
+                                                 {activeColumns.map(([key, config]) => {
+                           // Special handling for dimensions columns
+                           if (key === 'length' || key === 'width' || key === 'height') {
+                             return null;
+                           }
+                           if (key === 'dimensions') {
+                             return (
+                               <td key={key} className="px-6 py-4 whitespace-nowrap h-16">
+                                 {renderCell(product, key, config)}
+                               </td>
+                             );
+                           }
                           if (key === 'categories_display') {
                             return (
                               <React.Fragment key={`categories-cells-${key}`}>

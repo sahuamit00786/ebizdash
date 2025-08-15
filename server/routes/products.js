@@ -4155,6 +4155,7 @@ router.get("/", authenticateToken, async (req, res) => {
               'id': 'p.id',
               'sku': 'p.sku',
               'name': 'p.name',
+              'image_url': 'p.image_url',
               'short_description': 'p.short_description',
               'description': 'p.description',
               'brand': 'p.brand',
@@ -4589,8 +4590,8 @@ router.get("/", authenticateToken, async (req, res) => {
       SELECT COUNT(*) as total 
       FROM products p 
       LEFT JOIN vendors v ON p.vendor_id = v.id 
-      LEFT JOIN categories vc ON p.vendor_category_id = vc.id
-      LEFT JOIN categories sc ON p.store_category_id = sc.id
+      LEFT JOIN categories vc ON p.vendor_category_id = vc.id AND vc.type = 'vendor'
+      LEFT JOIN categories sc ON p.store_category_id = sc.id AND sc.type = 'store'
       ${whereClause}
     `
 
@@ -4608,8 +4609,8 @@ router.get("/", authenticateToken, async (req, res) => {
              sc.name as store_category_name
       FROM products p 
       LEFT JOIN vendors v ON p.vendor_id = v.id 
-      LEFT JOIN categories vc ON p.vendor_category_id = vc.id
-      LEFT JOIN categories sc ON p.store_category_id = sc.id
+      LEFT JOIN categories vc ON p.vendor_category_id = vc.id AND vc.type = 'vendor'
+      LEFT JOIN categories sc ON p.store_category_id = sc.id AND sc.type = 'store'
       ${whereClause}
       ORDER BY p.updated_at DESC 
       LIMIT ? OFFSET ?
@@ -4636,8 +4637,8 @@ router.get("/", authenticateToken, async (req, res) => {
                sc.name as store_category_name
         FROM products p 
         LEFT JOIN vendors v ON p.vendor_id = v.id 
-        LEFT JOIN categories vc ON p.vendor_category_id = vc.id
-        LEFT JOIN categories sc ON p.store_category_id = sc.id
+        LEFT JOIN categories vc ON p.vendor_category_id = vc.id AND vc.type = 'vendor'
+        LEFT JOIN categories sc ON p.store_category_id = sc.id AND sc.type = 'store'
         ${whereClause}
         ORDER BY p.updated_at DESC 
         LIMIT ${parseInt(limitNum)} OFFSET ${parseInt(offset)}
@@ -4684,8 +4685,8 @@ router.get("/", authenticateToken, async (req, res) => {
                sc.name as store_category_name
         FROM products p 
         LEFT JOIN vendors v ON p.vendor_id = v.id 
-        LEFT JOIN categories vc ON p.vendor_category_id = vc.id
-        LEFT JOIN categories sc ON p.store_category_id = sc.id
+        LEFT JOIN categories vc ON p.vendor_category_id = vc.id AND vc.type = 'vendor'
+        LEFT JOIN categories sc ON p.store_category_id = sc.id AND sc.type = 'store'
         ORDER BY p.updated_at DESC 
         LIMIT ${parseInt(limitNum)} OFFSET ${parseInt(offset)}
       `
@@ -4724,6 +4725,7 @@ router.get("/import/fields", authenticateToken, async (req, res) => {
         fields: [
           { key: "sku", label: "SKU", required: true, type: "text" },
           { key: "name", label: "Product Name", required: true, type: "text" },
+          { key: "image_url", label: "Image URL", required: false, type: "text" },
           { key: "short_description", label: "Short Description", required: false, type: "text" },
           { key: "description", label: "Description", required: false, type: "text" },
           { key: "brand", label: "Brand", required: false, type: "text" },
@@ -5104,40 +5106,6 @@ router.put("/:id", authenticateToken, async (req, res) => {
 
     await db.execute(`UPDATE products SET ${fields}, updated_at = NOW() WHERE id = ?`, values)
 
-    // Update category name if product name changed and category exists
-    if (updateData.name && processedData.name) {
-      console.log(`🔄 Product ${id} name changed to: ${processedData.name}`)
-      
-      const [product] = await db.execute(
-        "SELECT vendor_category_id, store_category_id FROM products WHERE id = ?",
-        [id]
-      )
-      
-      if (product.length > 0) {
-        const { vendor_category_id, store_category_id } = product[0]
-        
-        // Update vendor category name if it exists (ONLY the name, preserve all other fields)
-        if (vendor_category_id) {
-          console.log(`📝 Updating vendor category ${vendor_category_id} name to: ${processedData.name}`)
-          console.log(`🔒 Preserving category structure - only updating name field`)
-          await db.execute(
-            "UPDATE categories SET name = ? WHERE id = ?",
-            [processedData.name, vendor_category_id]
-          )
-        }
-        
-        // Update store category name if it exists (ONLY the name, preserve all other fields)
-        if (store_category_id) {
-          console.log(`📝 Updating store category ${store_category_id} name to: ${processedData.name}`)
-          console.log(`🔒 Preserving category structure - only updating name field`)
-          await db.execute(
-            "UPDATE categories SET name = ? WHERE id = ?",
-            [processedData.name, store_category_id]
-          )
-        }
-      }
-    }
-
     res.json({ message: "Product updated successfully" })
   } catch (error) {
     console.error("Update product error:", error)
@@ -5296,8 +5264,8 @@ router.get("/export", authenticateToken, async (req, res) => {
         sc.id as store_category_id
       FROM products p
       LEFT JOIN vendors v ON p.vendor_id = v.id
-      LEFT JOIN categories vc ON p.vendor_category_id = vc.id
-      LEFT JOIN categories sc ON p.store_category_id = sc.id
+      LEFT JOIN categories vc ON p.vendor_category_id = vc.id AND vc.type = 'vendor'
+      LEFT JOIN categories sc ON p.store_category_id = sc.id AND sc.type = 'store'
       ${whereClause}
       ORDER BY p.id
     `, queryParams)
@@ -5354,14 +5322,14 @@ router.get("/export", authenticateToken, async (req, res) => {
 
     const getVendorCategoryPath = (vendorCategoryId) => {
       const path = buildCategoryPath(vendorCategoryId, vendorCategoryMap)
-      return path.join(" < ")
+      return path.join(" > ")
     }
 
     let csvData = []
     
     if (mode === "woocommerce") {
       const headers = [
-        "ID", "SKU", "Product Name", "Short Description", "Description", "Brand", "MFN",
+        "ID", "SKU", "Product Name", "Image URL", "Short Description", "Description", "Brand", "MFN",
         "Stock", "List Price", "Market Price", "Cost", "Special Price", "Weight",
         "Length", "Width", "Height", "Vendor", "Vendor Category", "Store Category Path", "Vendor Category Path",
         "Google Category", "Published", "Featured", "Visibility", "Created", "Updated"
@@ -5376,6 +5344,7 @@ router.get("/export", authenticateToken, async (req, res) => {
           product.id,
           product.sku,
           product.name,
+          product.image_url || "",
           product.short_description,
           product.description,
           product.brand,
@@ -5404,7 +5373,7 @@ router.get("/export", authenticateToken, async (req, res) => {
       })
     } else {
       const headers = [
-        "ID", "SKU", "Product Name", "Short Description", "Description", "Brand", "MFN",
+        "ID", "SKU", "Product Name", "Image URL", "Short Description", "Description", "Brand", "MFN",
         "Stock", "List Price", "Market Price", "Cost", "Special Price", "Weight",
         "Length", "Width", "Height", "Vendor", "Vendor ParentCategory", "Vendor Subcategory1", 
         "Vendor Subcategory2", "Vendor Subcategory3", "Vendor Subcategory4",
@@ -5421,6 +5390,7 @@ router.get("/export", authenticateToken, async (req, res) => {
           product.id,
           product.sku,
           product.name,
+          product.image_url || "",
           product.short_description,
           product.description,
           product.brand,
@@ -5529,8 +5499,8 @@ router.get("/:id", authenticateToken, async (req, res) => {
         sc.name as store_category_name
       FROM products p
       LEFT JOIN vendors v ON p.vendor_id = v.id
-      LEFT JOIN categories vc ON p.vendor_category_id = vc.id
-      LEFT JOIN categories sc ON p.store_category_id = sc.id
+      LEFT JOIN categories vc ON p.vendor_category_id = vc.id AND vc.type = 'vendor'
+      LEFT JOIN categories sc ON p.store_category_id = sc.id AND sc.type = 'store'
       WHERE p.id = ?
     `, [id])
 

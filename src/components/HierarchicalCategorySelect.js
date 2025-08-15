@@ -18,6 +18,8 @@ const HierarchicalCategorySelect = ({
 
   // Filter categories by type and build hierarchical structure
   const buildHierarchicalCategories = (cats) => {
+    if (!cats || !Array.isArray(cats)) return []
+    
     const typeCategories = cats.filter(cat => cat.type === type)
     
     const buildTree = (items, parentId = null) => {
@@ -35,10 +37,13 @@ const HierarchicalCategorySelect = ({
 
   // Get selected category name for display
   const getSelectedCategoryName = () => {
-    if (!value) return ""
+    if (!value || !categories || !Array.isArray(categories)) return ""
+    
+    // Convert value to number for comparison
+    const numericValue = typeof value === 'string' ? parseInt(value) : value
     
     // First try to find in the flat categories array
-    const flatCategory = categories.find(cat => cat.id === value)
+    const flatCategory = categories.find(cat => cat.id === numericValue)
     if (flatCategory) return flatCategory.name
     
     // If not found in flat array, search in hierarchical structure
@@ -53,12 +58,17 @@ const HierarchicalCategorySelect = ({
       return null
     }
     
-    const selected = findCategory(categories, value)
+    const selected = findCategory(categories, numericValue)
     return selected ? selected.name : ""
   }
 
   // Filter categories based on search term
   useEffect(() => {
+    if (!categories || !Array.isArray(categories)) {
+      setFilteredCategories([])
+      return
+    }
+    
     if (!searchTerm.trim()) {
       setFilteredCategories(buildHierarchicalCategories(categories))
     } else {
@@ -153,25 +163,17 @@ const HierarchicalCategorySelect = ({
     return (
       <div key={category.id}>
         <div 
-          className={`category-option ${value === category.id ? 'selected' : ''}`}
+          className={`category-option ${value == category.id ? 'selected' : ''}`}
           style={{ paddingLeft: `${indent + 6}px` }}
           onClick={() => {
+            console.log('Category clicked:', category.id, category.name, 'Type:', type)
             onChange(category.id)
             setIsOpen(false)
             setSearchTerm("")
           }}
         >
           <div className="category-content">
-            <span 
-              className="category-name"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Navigate to category page or handle category click
-                console.log('Navigate to category:', category.name, category.id);
-                // You can add navigation logic here
-                // window.location.href = `/categories/${category.id}`;
-              }}
-            >
+            <span className="category-name">
               {category.name}
             </span>
             {category.product_count > 0 && (

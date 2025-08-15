@@ -10,11 +10,10 @@ const pool = mysql.createPool({
   database:  "product_management",
   charset: 'utf8mb4',
   waitForConnections: true,
-  connectionLimit: 20, // Reduced for better performance
-  queueLimit: 5, // Reduced queue limit
-  // Performance optimizations
-  acquireTimeout: 10000, // Faster timeout
-  timeout: 10000, // Faster timeout
+  connectionLimit: 20, 
+  queueLimit: 5,
+  acquireTimeout: 10000, 
+  timeout: 10000, 
   // Connection optimizations
   multipleStatements: true,
   // Query optimizations

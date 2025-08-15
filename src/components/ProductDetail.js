@@ -8,6 +8,8 @@ import API_BASE_URL from "../config/api"
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import HierarchicalCategorySelect from './HierarchicalCategorySelect'
+import HierarchicalCategoryTree from './HierarchicalCategoryTree'
+import CategoryTreeSelector from './CategoryTreeSelector'
 import "./ProductDetail.css"
 
 const ProductDetail = () => {
@@ -98,7 +100,9 @@ const ProductDetail = () => {
       if (response.ok) {
         const data = await response.json()
         // Use flatCategories for the hierarchical component as it contains all category data
-        setCategories(data.flatCategories || data.categories || [])
+        const categoriesData = data.flatCategories || data.categories || []
+        console.log('Loaded categories:', categoriesData)
+        setCategories(categoriesData)
       }
     } catch (error) {
       console.error("Error loading categories:", error)
@@ -123,7 +127,15 @@ const ProductDetail = () => {
     let processedValue = value
     
     // Handle numeric fields - convert empty strings to null
-    if (['list_price', 'market_price', 'vendor_cost', 'special_price', 'weight', 'length', 'width', 'height', 'stock', 'vendor_id', 'vendor_category_id', 'store_category_id'].includes(field)) {
+    if (['list_price', 'market_price', 'vendor_cost', 'special_price', 'weight', 'length', 'width', 'height', 'stock', 'vendor_id'].includes(field)) {
+      if (value === '' || value === null || value === undefined) {
+        processedValue = null
+      } else {
+        processedValue = Number(value) || null
+      }
+    }
+    // Handle category fields - keep as is but ensure proper type
+    else if (['vendor_category_id', 'store_category_id'].includes(field)) {
       if (value === '' || value === null || value === undefined) {
         processedValue = null
       } else {
@@ -828,12 +840,17 @@ const ProductDetail = () => {
                 <div className="form-group">
                   <label>Vendor Category</label>
                   {editing ? (
-                    <HierarchicalCategorySelect
+                    <CategoryTreeSelector
                       categories={categories}
-                      value={currentData.vendor_category_id || ""}
-                      onChange={(value) => handleInputChange("vendor_category_id", value ? parseInt(value) : null)}
-                      placeholder="Select Vendor Category"
+                      selectedCategories={currentData.vendor_category_id ? [currentData.vendor_category_id] : []}
+                      onSelectionChange={(selectedIds) => {
+                        console.log('Vendor categories selected:', selectedIds)
+                        const selectedId = selectedIds.length > 0 ? selectedIds[0] : null
+                        handleInputChange("vendor_category_id", selectedId)
+                      }}
                       type="vendor"
+                      vendorId={currentData.vendor_id}
+                      placeholder="Select Vendor Category"
                     />
                   ) : (
                     <div className="form-display">{currentData.vendor_category_name || "-"}</div>
@@ -843,12 +860,16 @@ const ProductDetail = () => {
                 <div className="form-group">
                   <label>Store Category</label>
                   {editing ? (
-                    <HierarchicalCategorySelect
+                    <CategoryTreeSelector
                       categories={categories}
-                      value={currentData.store_category_id || ""}
-                      onChange={(value) => handleInputChange("store_category_id", value ? parseInt(value) : null)}
-                      placeholder="Select Store Category"
+                      selectedCategories={currentData.store_category_id ? [currentData.store_category_id] : []}
+                      onSelectionChange={(selectedIds) => {
+                        console.log('Store categories selected:', selectedIds)
+                        const selectedId = selectedIds.length > 0 ? selectedIds[0] : null
+                        handleInputChange("store_category_id", selectedId)
+                      }}
                       type="store"
+                      placeholder="Select Store Category"
                     />
                   ) : (
                     <div className="form-display">{currentData.store_category_name || "-"}</div>

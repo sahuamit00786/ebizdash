@@ -182,6 +182,7 @@ const CsvImportModal = ({ isOpen, onClose, onImportComplete }) => {
           // Auto-mapping logic
           if (lowerHeader.includes('sku')) mapping[header] = "sku"
           else if (lowerHeader.includes('name') && !lowerHeader.includes('category')) mapping[header] = "name"
+          else if (lowerHeader.includes('image') && (lowerHeader.includes('url') || lowerHeader.includes('link'))) mapping[header] = "image_url"
           else if (lowerHeader.includes('description')) mapping[header] = "description"
           else if (lowerHeader.includes('brand')) mapping[header] = "brand"
           else if (lowerHeader.includes('mfn')) mapping[header] = "mfn"

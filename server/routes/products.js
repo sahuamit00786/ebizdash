@@ -635,87 +635,89 @@ const upload = multer({ storage: storage })
 //   }
 // })
 
-// // Download CSV template
-// router.get("/import/template", authenticateToken, async (req, res) => {
-//   try {
-//     const templateData = [
-//       {
-//         sku: "PROD001",
-//         name: "Sample Product",
-//         short_description: "Brief product description",
-//         description: "Detailed product description",
-//         brand: "Sample Brand",
-//         mfn: "MFN001",
-//         stock: 100,
-//         list_price: 99.99,
-//         market_price: 89.99,
-//         vendor_cost: 50.00,
-//         special_price: 79.99,
-//         weight: 1.5,
-//         length: 10,
-//         width: 5,
-//         height: 3,
-//         google_category: "Electronics",
-//         category_hierarchy: "Electronics > Mobile Devices > Smartphones > Premium",
-//         vendor_category: "Electronics",
-//         vendor_subcategory_1: "Smartphones",
-//         vendor_subcategory_2: "Android",
-//         vendor_subcategory_3: "Flagship",
-//         vendor_subcategory_4: "5G",
-//         vendor_subcategory_5: "Premium",
-//         published: true,
-//         featured: false,
-//         visibility: "public",
-//         vendor_id: 1,
-//         meta_title: "Sample Product - Meta Title",
-//         meta_description: "Sample product meta description for SEO",
-//         meta_keywords: "sample, product, keywords"
-//       },
-//       {
-//         sku: "PROD002",
-//         name: "Alternative Format Example",
-//         short_description: "Example with alternative field names",
-//         description: "This example uses the alternative field naming convention",
-//         brand: "Alt Brand",
-//         mfn: "MFN002",
-//         stock: 50,
-//         list_price: 149.99,
-//         market_price: 129.99,
-//         vendor_cost: 75.00,
-//         special_price: 119.99,
-//         weight: 2.0,
-//         length: 15,
-//         width: 8,
-//         height: 4,
-//         google_category: "Computers",
-//         vendor_category: "Electronics",
-//         vendor_subcategory_1: "Computers",
-//         vendor_subcategory_2: "Laptops",
-//         vendor_subcategory_3: "Gaming",
-//         vendor_subcategory_4: "High-End",
-//         vendor_subcategory_5: "RTX Series",
-//         published: true,
-//         featured: true,
-//         visibility: "public",
-//         vendor_id: 2,
-//         meta_title: "Alternative Format - Meta Title",
-//         meta_description: "Alternative format example meta description",
-//         meta_keywords: "alternative, format, example"
-//       }
-//     ]
+// Download CSV template
+router.get("/import/template", authenticateToken, async (req, res) => {
+  try {
+    const templateData = [
+      {
+        sku: "PROD001",
+        name: "Sample Product",
+        short_description: "Brief product description",
+        description: "Detailed product description",
+        brand: "Sample Brand",
+        mfn: "MFN001",
+        stock: 100,
+        list_price: 99.99,
+        market_price: 89.99,
+        vendor_cost: 50.00,
+        special_price: 79.99,
+        weight: 1.5,
+        length: 10,
+        width: 5,
+        height: 3,
+        google_category: "Electronics",
+        image_url: "https://example.com/images/sample-product-1.jpg",
+        category_hierarchy: "Electronics > Mobile Devices > Smartphones > Premium",
+        vendor_category: "Electronics",
+        vendor_subcategory_1: "Smartphones",
+        vendor_subcategory_2: "Android",
+        vendor_subcategory_3: "Flagship",
+        vendor_subcategory_4: "5G",
+        vendor_subcategory_5: "Premium",
+        published: true,
+        featured: false,
+        visibility: "public",
+        vendor_id: 1,
+        meta_title: "Sample Product - Meta Title",
+        meta_description: "Sample product meta description for SEO",
+        meta_keywords: "sample, product, keywords"
+      },
+      {
+        sku: "PROD002",
+        name: "Alternative Format Example",
+        short_description: "Example with alternative field names",
+        description: "This example uses the alternative field naming convention",
+        brand: "Alt Brand",
+        mfn: "MFN002",
+        stock: 50,
+        list_price: 149.99,
+        market_price: 129.99,
+        vendor_cost: 75.00,
+        special_price: 119.99,
+        weight: 2.0,
+        length: 15,
+        width: 8,
+        height: 4,
+        google_category: "Computers",
+        image_url: "https://example.com/images/sample-product-2.jpg",
+        vendor_category: "Electronics",
+        vendor_subcategory_1: "Computers",
+        vendor_subcategory_2: "Laptops",
+        vendor_subcategory_3: "Gaming",
+        vendor_subcategory_4: "High-End",
+        vendor_subcategory_5: "RTX Series",
+        published: true,
+        featured: true,
+        visibility: "public",
+        vendor_id: 2,
+        meta_title: "Alternative Format - Meta Title",
+        meta_description: "Alternative format example meta description",
+        meta_keywords: "alternative, format, example"
+      }
+    ]
 
-//     const csvHeader = Object.keys(templateData[0]).join(",")
-//     const csvRows = templateData.map(row => Object.values(row).join(","))
-//     const csvContent = [csvHeader, ...csvRows].join("\n")
+    const csvHeader = Object.keys(templateData[0]).join(",")
+    const csvRows = templateData.map(row => Object.values(row).join(","))
+    const csvContent = [csvHeader, ...csvRows].join("\n")
 
-//     res.setHeader("Content-Type", "text/csv")
-//     res.setHeader("Content-Disposition", "attachment; filename=products_template.csv")
-//     res.send(csvContent)
-//   } catch (error) {
-//     console.error("Error generating template:", error)
-//     res.status(500).json({ message: "Server error" })
-//   }
-// })
+    res.setHeader("Content-Type", "text/csv")
+    res.setHeader("Content-Disposition", "attachment; filename=products_template.csv")
+    res.send(csvContent)
+  } catch (error) {
+    console.error("Error generating template:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
 
 // Preview CSV import
 router.post("/import/preview", authenticateToken, upload.single("csvFile"), async (req, res) => {
@@ -3656,6 +3658,7 @@ router.post("/import/ultra-fast", authenticateToken, upload.single("csvFile"), a
                     short_description: mapping.short_description && row[mapping.short_description] ? row[mapping.short_description].trim() : null,
                     description: mapping.description && row[mapping.description] ? row[mapping.description].trim() : null,
                     brand: mapping.brand && row[mapping.brand] ? row[mapping.brand].trim() : null,
+                    mfn: mapping.mfn && row[mapping.mfn] ? row[mapping.mfn].trim() : null,
                     stock: mapping.stock && row[mapping.stock] ? parseInt(row[mapping.stock]) || 0 : 0,
                     list_price: mapping.list_price && row[mapping.list_price] ? parseFloat(row[mapping.list_price]) || 0 : 0,
                     market_price: mapping.market_price && row[mapping.market_price] ? parseFloat(row[mapping.market_price]) || 0 : 0,
@@ -3665,6 +3668,14 @@ router.post("/import/ultra-fast", authenticateToken, upload.single("csvFile"), a
                     length: mapping.length && row[mapping.length] ? parseFloat(row[mapping.length]) || 0 : 0,
                     width: mapping.width && row[mapping.width] ? parseFloat(row[mapping.width]) || 0 : 0,
                     height: mapping.height && row[mapping.height] ? parseFloat(row[mapping.height]) || 0 : 0,
+                    image_url: mapping.image_url && row[mapping.image_url] ? row[mapping.image_url].trim() : null,
+                    google_category: mapping.google_category && row[mapping.google_category] ? row[mapping.google_category].trim() : null,
+                    published: mapping.published && row[mapping.published] ? (row[mapping.published].toLowerCase() === 'true' || row[mapping.published] === '1') : true,
+                    featured: mapping.featured && row[mapping.featured] ? (row[mapping.featured].toLowerCase() === 'true' || row[mapping.featured] === '1') : false,
+                    visibility: mapping.visibility && row[mapping.visibility] ? row[mapping.visibility].trim() : 'public',
+                    meta_title: mapping.meta_title && row[mapping.meta_title] ? row[mapping.meta_title].trim() : null,
+                    meta_description: mapping.meta_description && row[mapping.meta_description] ? row[mapping.meta_description].trim() : null,
+                    meta_keywords: mapping.meta_keywords && row[mapping.meta_keywords] ? row[mapping.meta_keywords].trim() : null,
                     vendor_id: vendorId,
                     vendor_category_id: vendorCategoryId,
                     created_at: new Date()

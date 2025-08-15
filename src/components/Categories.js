@@ -15,7 +15,7 @@ const Categories = () => {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
-  const [inlineEditing, setInlineEditing] = useState(null) // { id, name, originalName }
+
   const [expandedCategories, setExpandedCategories] = useState(new Set())
   const [selectedType, setSelectedType] = useState("all")
   const [selectedVendor, setSelectedVendor] = useState("all")
@@ -232,67 +232,17 @@ const Categories = () => {
   }
 
   const handleEditCategory = (category) => {
-    setInlineEditing({
+    setEditingCategory({
       id: category.id,
       name: category.name,
-      originalName: category.name
+      type: category.type || category.description || "store",
+      parent_id: category.parent_id,
+      status: category.status || "active"
     })
+    setShowModal(true)
   }
 
-  const handleInlineSave = async () => {
-    if (!inlineEditing || inlineEditing.name.trim() === '') {
-      showToast("Category name cannot be empty", "error")
-      return
-    }
 
-    if (inlineEditing.name === inlineEditing.originalName) {
-      setInlineEditing(null)
-      return
-    }
-
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        handleInvalidToken()
-        return
-      }
-
-      const response = await fetch(`${API_BASE_URL}/categories/${inlineEditing.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: inlineEditing.name.trim(),
-          type: flatCategories.find(cat => cat.id === inlineEditing.id)?.type || 'store'
-        }),
-      })
-
-      if (response.ok) {
-        showToast("Category name updated successfully", "success")
-        setInlineEditing(null)
-        fetchCategories(selectedVendor)
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        showToast(errorData.message || "Error updating category", "error")
-      }
-    } catch (error) {
-      console.error("Error updating category:", error)
-      showToast("Error updating category. Please try again.", "error")
-    }
-  }
-
-  const handleInlineCancel = () => {
-    setInlineEditing(null)
-  }
-
-  const handleInlineChange = (e) => {
-    setInlineEditing(prev => ({
-      ...prev,
-      name: e.target.value
-    }))
-  }
 
   const handleDeleteCategory = async (category) => {
     if (!confirm(`Are you sure you want to delete "${category.name}"? This will also delete all subcategories.`)) {
@@ -643,60 +593,24 @@ const Categories = () => {
                   {hasSubcategories ? "📁" : "📄"}
                 </span>
                 <div className="category-info">
-                  {inlineEditing && inlineEditing.id === category.id ? (
-                    <div className="inline-edit-container">
-                      <input
-                        type="text"
-                        value={inlineEditing.name}
-                        onChange={handleInlineChange}
-                        className="inline-edit-input"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleInlineSave()
-                          } else if (e.key === 'Escape') {
-                            handleInlineCancel()
-                          }
-                        }}
-                      />
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={handleInlineSave}
-                        title="Save"
-                      >
-                        ✅
-                      </button>
-                      <button
-                        className="btn btn-sm btn-secondary"
-                        onClick={handleInlineCancel}
-                        title="Cancel"
-                      >
-                        ❌
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <span 
-                        className="category-name"
-                        onClick={() => handleEditCategory(category)}
-                        style={{ cursor: 'pointer' }}
-                        title="Click to edit name"
-                      >
-                        {category.name}
-                      </span>
-                      <div className="category-meta">
-                        <span className="category-type">[{category.type}]</span>
-                        <span className="category-level">Level {category.level}</span>
-                        <span className="product-count" title="Includes products from all subcategories">
-                          ({getHierarchicalProductCount(category)} products)
-                        </span>
-                        {category.vendor_name && (
-                          <span className="vendorData">Vendor: {category.vendor_name}</span>
-                        )}
-                       
-                      </div>
-                    </>
-                  )}
+                  <span 
+                    className="category-name"
+                    style={{ cursor: 'pointer' }}
+                    title="Click to edit category"
+                  >
+                    {category.name}
+                  </span>
+                  <div className="category-meta">
+                    <span className="category-type">[{category.type}]</span>
+                    <span className="category-level">Level {category.level}</span>
+                    <span className="product-count" title="Includes products from all subcategories">
+                      ({getHierarchicalProductCount(category)} products)
+                    </span>
+                    {category.vendor_name && (
+                      <span className="vendorData">Vendor: {category.vendor_name}</span>
+                    )}
+                   
+                  </div>
                 </div>
               </div>
               
@@ -707,14 +621,21 @@ const Categories = () => {
                   </span>
                 )}
                 <button
-                  className="btn btn-sm btn-primary"
+                  className="btn btn-xs btn-secondary"
+                  onClick={() => handleEditCategory(category)}
+                  title="Edit Category"
+                >
+                  ✏️
+                </button>
+                <button
+                  className="btn btn-xs btn-primary"
                   onClick={() => handleAddSubcategory(category)}
                   title="Add Subcategory"
                 >
                   ➕
                 </button>
                 <button
-                  className="btn btn-sm btn-danger"
+                  className="btn btn-xs btn-danger"
                   onClick={() => handleDeleteCategory(category)}
                   title="Delete"
                 >
@@ -760,38 +681,7 @@ const Categories = () => {
                     {isExpanded ? "▼" : "▶"}
                   </button>
                 )}
-                {inlineEditing && inlineEditing.id === category.id ? (
-                  <div className="inline-edit-container">
-                    <input
-                      type="text"
-                      value={inlineEditing.name}
-                      onChange={handleInlineChange}
-                      className="inline-edit-input"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleInlineSave()
-                        } else if (e.key === 'Escape') {
-                          handleInlineCancel()
-                        }
-                      }}
-                    />
-                    <button
-                      className="btn btn-sm btn-success"
-                      onClick={handleInlineSave}
-                      title="Save"
-                    >
-                      ✅
-                    </button>
-                    <button
-                      className="btn btn-sm btn-secondary"
-                      onClick={handleInlineCancel}
-                      title="Cancel"
-                    >
-                      ❌
-                    </button>
-                  </div>
-                ) : (
+
                   <span 
                     className="category-name"
                     onClick={() => handleEditCategory(category)}
@@ -819,14 +709,21 @@ const Categories = () => {
                   </span>
                 )}
                 <button
-                  className="btn btn-sm btn-primary"
+                  className="btn btn-xs btn-secondary"
+                  onClick={() => handleEditCategory(category)}
+                  title="Edit Category"
+                >
+                  ✏️
+                </button>
+                <button
+                  className="btn btn-xs btn-primary"
                   onClick={() => handleAddSubcategory(category)}
                   title="Add Subcategory"
                 >
                   ➕
                 </button>
                 <button
-                  className="btn btn-sm btn-danger"
+                  className="btn btn-xs btn-danger"
                   onClick={() => handleDeleteCategory(category)}
                   title="Delete"
                 >

@@ -9,6 +9,7 @@ import ProductModal from "./ProductModal"
 import BulkEditModal from "./BulkEditModal"
 import CsvImportModal from "./CsvImportModal"
 import ExportModal from "./ExportModal"
+
 import { Search, Filter, Plus, Upload, Download, Settings, X, ChevronDown, ChevronRight, Folder, File, MoreHorizontal, Edit, Eye, Trash2, Copy } from "lucide-react"
 
 // Available table columns configuration - compact version
@@ -249,6 +250,8 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [hoveredProduct, setHoveredProduct] = useState(null)
+  const [searchSuggestions, setSearchSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [showCategorySelector, setShowCategorySelector] = useState(false)
   const [selectedCategories, setSelectedCategories] = useState([])
   const [expandedCategories, setExpandedCategories] = useState(new Set())
@@ -453,6 +456,19 @@ const Products = () => {
     fetchCategories()
   }, [fetchVendors, fetchCategories, fetchProducts])
 
+  // Handle click outside search suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const searchContainer = event.target.closest('.search-container')
+      if (!searchContainer) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   // Separate effect for page changes only
   useEffect(() => {
     fetchProducts()
@@ -534,6 +550,34 @@ const Products = () => {
   // Handle search input change (not triggering search)
   const handleSearchInputChange = useCallback((value) => {
     setSearchInput(value)
+    
+    // Fetch search suggestions if input is long enough
+    if (value.trim().length >= 2) {
+      fetchSearchSuggestions(value)
+    } else {
+      setSearchSuggestions([])
+      setShowSuggestions(false)
+    }
+  }, [])
+
+  // Fetch search suggestions
+  const fetchSearchSuggestions = useCallback(async (query) => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${API_BASE_URL}/products/search/realtime?q=${encodeURIComponent(query)}&limit=5`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSearchSuggestions(data)
+        setShowSuggestions(data.length > 0)
+      }
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error)
+    }
   }, [])
 
   // Advanced filter functions
@@ -610,6 +654,9 @@ const Products = () => {
   const handleEditProduct = useCallback((product) => {
     setEditingProduct(product)
     setShowProductModal(true)
+    // Hide search suggestions when modal opens
+    setShowSuggestions(false)
+    setSearchSuggestions([])
   }, [])
 
   const handleQuickEdit = useCallback((product) => {
@@ -714,6 +761,9 @@ const Products = () => {
 
   const handleImportClick = useCallback(() => {
     setShowCsvImportModal(true)
+    // Hide search suggestions when modal opens
+    setShowSuggestions(false)
+    setSearchSuggestions([])
   }, [])
 
   const handleImportComplete = useCallback(async () => {
@@ -918,11 +968,12 @@ const Products = () => {
     })
   }
 
-  // CategorySelector Component
-  const CategorySelector = ({ isOpen, onClose, onApply, type }) => {
-    const [localSelectedCategories, setLocalSelectedCategories] = useState(
-      type === 'vendor' ? selectedVendorCategories : selectedStoreCategories
-    )
+     // CategorySelector Component
+   const CategorySelector = ({ isOpen, onClose, onApply, type }) => {
+     const [localSelectedCategories, setLocalSelectedCategories] = useState(
+       type === 'vendor' ? selectedVendorCategories : selectedStoreCategories
+     )
+     const [searchTerm, setSearchTerm] = useState("")
 
     const handleCategoryToggle = (categoryId) => {
       setLocalSelectedCategories(prev => 
@@ -932,95 +983,166 @@ const Products = () => {
       )
     }
 
-    const handleSelectAll = () => {
-      const filteredCategories = flatCategories.filter(cat => cat.type === type)
-      const allCategoryIds = filteredCategories.map(cat => cat.id)
-      setLocalSelectedCategories(allCategoryIds)
-    }
+         const handleSelectAll = () => {
+       const filteredCategories = categories.filter(cat => cat.type === type)
+       const allCategoryIds = getAllCategoryIds(filteredCategories)
+       setLocalSelectedCategories(allCategoryIds)
+     }
+
+     const getAllCategoryIds = (categoryList) => {
+       let ids = []
+       categoryList.forEach(category => {
+         ids.push(category.id)
+         if (category.subcategories && category.subcategories.length > 0) {
+           ids = ids.concat(getAllCategoryIds(category.subcategories))
+         }
+       })
+       return ids
+     }
+
+     const getFilteredCategories = () => {
+       const typeCategories = categories.filter(cat => cat.type === type)
+       if (!searchTerm) return typeCategories
+       
+       const filterCategories = (cats) => {
+         return cats.filter(cat => {
+           const matchesSearch = cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                cat.description.toLowerCase().includes(searchTerm.toLowerCase())
+           const hasMatchingChildren = cat.subcategories && 
+                                     filterCategories(cat.subcategories).length > 0
+           return matchesSearch || hasMatchingChildren
+         }).map(cat => ({
+           ...cat,
+           subcategories: cat.subcategories ? filterCategories(cat.subcategories) : []
+         }))
+       }
+       
+       return filterCategories(typeCategories)
+     }
 
     const handleClearAll = () => {
       setLocalSelectedCategories([])
     }
 
-    const renderCategoryTree = (categoryList, level = 0) => {
-      return categoryList.map(category => {
-        const hasSubcategories = category.subcategories && category.subcategories.length > 0
-        const isExpanded = expandedCategories.has(category.id)
-        const isSelected = localSelectedCategories.includes(category.id)
-        const indent = level * 20
+         const renderCategoryTree = (categoryList, level = 0) => {
+       return categoryList.map(category => {
+         const hasSubcategories = category.subcategories && category.subcategories.length > 0
+         const isExpanded = expandedCategories.has(category.id)
+         const isSelected = localSelectedCategories.includes(category.id)
+         const indent = level * 20
 
-        return (
-          <div key={category.id} className="space-y-1">
-            <div className="flex items-center space-x-2 py-2 px-3 rounded-lg hover:bg-gray-50" style={{ paddingLeft: `${indent + 12}px` }}>
-              {hasSubcategories ? (
-                <button
-                  className="p-1 hover:bg-gray-200 rounded"
-                  onClick={() => handleToggleExpand(category.id)}
-                >
-                  {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                </button>
-              ) : (
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <div className="w-px h-4 bg-gray-300"></div>
-                </div>
-              )}
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => handleCategoryToggle(category.id)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              {hasSubcategories ? <Folder className="w-4 h-4 text-blue-500" /> : <File className="w-4 h-4 text-gray-400" />}
-              <div className="flex-1">
-                <span className="text-sm font-medium text-gray-900">{category.name}</span>
-                <span className="ml-2 text-xs text-gray-500">({category.product_count || 0})</span>
-              </div>
-            </div>
-            
-            {hasSubcategories && isExpanded && (
-              <div className="ml-4">
-                {renderCategoryTree(category.subcategories, level + 1)}
-              </div>
-            )}
-          </div>
-        )
-      })
-    }
+         return (
+           <div key={category.id} className="space-y-1">
+             <div className="flex items-center space-x-2 py-2 px-3 rounded-lg hover:bg-gray-50 w-full" style={{ paddingLeft: `${indent + 12}px` }}>
+               {hasSubcategories ? (
+                 <button
+                   className="p-1 hover:bg-gray-200 rounded"
+                   onClick={() => handleToggleExpand(category.id)}
+                 >
+                   {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                 </button>
+               ) : (
+                 <div className="w-6 h-6 flex items-center justify-center">
+                   <div className="w-px h-4 bg-gray-300"></div>
+                 </div>
+               )}
+               <input
+                 type="checkbox"
+                 checked={isSelected}
+                 onChange={() => handleCategoryToggle(category.id)}
+                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+               />
+               {hasSubcategories ? <Folder className="w-4 h-4 text-blue-500" /> : <File className="w-4 h-4 text-gray-400" />}
+               <div className="flex-1">
+                 <span className="text-sm font-medium text-gray-900">{category.name}</span>
+                 <span className="ml-2 text-xs text-gray-500">
+                   ({category.product_count || 0} products)
+                 </span>
+                 {hasSubcategories && (
+                   <span className="ml-2 text-xs text-blue-500">
+                     {category.subcategories.length} subcategories
+                   </span>
+                 )}
+               </div>
+             </div>
+             
+             {hasSubcategories && isExpanded && (
+               <div className="ml-4">
+                 {renderCategoryTree(category.subcategories, level + 1)}
+               </div>
+             )}
+           </div>
+         )
+       })
+     }
 
     return (
       <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isOpen ? 'block' : 'hidden'}`} onClick={onClose}>
         <div className="flex items-center justify-center min-h-screen p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Select {type === 'vendor' ? 'Vendor' : 'Store'} Categories 
-                  <span className="ml-2 text-sm font-normal text-gray-500">
-                    ({localSelectedCategories.length} selected)
-                  </span>
-                </h3>
-                <div className="flex items-center space-x-2">
-                  <button 
-                    className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                    onClick={handleSelectAll}
-                  >
-                    Select All
-                  </button>
-                  <button 
-                    className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                    onClick={handleClearAll}
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
-            </div>
+          <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                         <div className="px-6 py-4 border-b border-gray-200">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <h3 className="text-lg font-semibold text-gray-900">
+                     Select {type === 'vendor' ? 'Vendor' : 'Store'} Categories 
+                     <span className="ml-2 text-sm font-normal text-gray-500">
+                       ({localSelectedCategories.length} selected)
+                     </span>
+                   </h3>
+                   <p className="text-sm text-gray-500 mt-1">
+                     Total {type} categories: {categories.filter(cat => cat.type === type).length}
+                   </p>
+                 </div>
+                 <div className="flex items-center space-x-2">
+                   <button 
+                     className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                     onClick={handleSelectAll}
+                   >
+                     Select All
+                   </button>
+                   <button 
+                     className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                     onClick={handleClearAll}
+                   >
+                     Clear All
+                   </button>
+                 </div>
+               </div>
+               
+               {/* Search input */}
+               <div className="mt-4">
+                 <div className="relative">
+                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                   <input
+                     type="text"
+                     placeholder={`Search ${type} categories...`}
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   />
+                 </div>
+               </div>
+             </div>
             
-            <div className="flex-1 overflow-auto p-6">
-              <div className="space-y-2">
-                {renderCategoryTree(categories.filter(cat => cat.type === type))}
-              </div>
-            </div>
+                         <div className="flex-1 overflow-auto p-6">
+               <div className="space-y-2 max-w-none">
+                 {searchTerm && (
+                   <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                     <p className="text-sm text-blue-700">
+                       Showing {getFilteredCategories().length} of {categories.filter(cat => cat.type === type).length} categories matching "{searchTerm}"
+                     </p>
+                   </div>
+                 )}
+                 {getFilteredCategories().length > 0 ? (
+                   renderCategoryTree(getFilteredCategories())
+                 ) : (
+                   <div className="text-center py-8 text-gray-500">
+                     <Search className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                     <p>No categories found matching "{searchTerm}"</p>
+                   </div>
+                 )}
+               </div>
+             </div>
             
             <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
               <button 
@@ -1201,28 +1323,28 @@ const Products = () => {
         }
         
         return (
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0">
             {vendorCategory && (
-              <div className="flex items-center space-x-1">
-                <div className="flex items-center">
+              <div className="flex items-center space-x-1 min-w-0">
+                <div className="flex items-center min-w-0 flex-1">
                   {Array.from({ length: vendorCategory.level - 1 }, (_, i) => (
-                    <div key={i} className="w-2 border-l border-gray-300 ml-1"></div>
+                    <div key={i} className="w-2 border-l border-gray-300 ml-1 flex-shrink-0"></div>
                   ))}
-                  <Folder className="w-4 h-4 text-blue-500 ml-1" />
-                  <span className="text-xs text-gray-900 ml-1">{vendorCategory.name}</span>
-                  <span className="text-xs text-gray-500">L{vendorCategory.level}</span>
+                  <Folder className="w-4 h-4 text-blue-500 ml-1 flex-shrink-0" />
+                  <span className="text-xs text-gray-900 ml-1 truncate" title={vendorCategory.name}>{vendorCategory.name}</span>
+                  <span className="text-xs text-gray-500 flex-shrink-0">L{vendorCategory.level}</span>
                 </div>
               </div>
             )}
             {storeCategory && (
-              <div className="flex items-center space-x-1">
-                <div className="flex items-center">
+              <div className="flex items-center space-x-1 min-w-0">
+                <div className="flex items-center min-w-0 flex-1">
                   {Array.from({ length: storeCategory.level - 1 }, (_, i) => (
-                    <div key={i} className="w-2 border-l border-gray-300 ml-1"></div>
+                    <div key={i} className="w-2 border-l border-gray-300 ml-1 flex-shrink-0"></div>
                   ))}
-                  <Folder className="w-4 h-4 text-green-500 ml-1" />
-                  <span className="text-xs text-gray-900 ml-1">{storeCategory.name}</span>
-                  <span className="text-xs text-gray-500">L{storeCategory.level}</span>
+                  <Folder className="w-4 h-4 text-green-500 ml-1 flex-shrink-0" />
+                  <span className="text-xs text-gray-900 ml-1 truncate" title={storeCategory.name}>{storeCategory.name}</span>
+                  <span className="text-xs text-gray-500 flex-shrink-0">L{storeCategory.level}</span>
                 </div>
               </div>
             )}
@@ -1245,7 +1367,7 @@ const Products = () => {
   }
 
   return (
-    <div className="max-w-[1800px]  min-h-screen bg-gray-50">
+    <div className={`w-full min-h-screen bg-gray-50 ${showProductModal || showBulkEditModal || showCsvImportModal || showExportModal || showVendorCategorySelector || showStoreCategorySelector ? 'modal-open' : ''}`}>
       <div>
         {/* Header */}
         <div className="  bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
@@ -1255,7 +1377,11 @@ const Products = () => {
               <div className="flex items-center space-x-3">
                 <button
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() => setShowColumnSelector(!showColumnSelector)}
+                  onClick={() => {
+                    setShowColumnSelector(!showColumnSelector)
+                    // Hide search suggestions when modal opens
+                    setShowSuggestions(false)
+                  }}
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Columns
@@ -1292,8 +1418,8 @@ const Products = () => {
         {/* Column Selector Modal */}
         {showColumnSelector && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setShowColumnSelector(false)}>
-            <div className="flex items-center justify-center min-h-screen p-4">
-              <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center min-h-screen p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-7xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
                 <div className="px-6 py-4 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900">Customize Table Columns</h3>
@@ -1353,27 +1479,137 @@ const Products = () => {
             <div className="space-y-4">
               {/* Search Bar */}
               <div className="flex items-center space-x-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchInput}
-                    onChange={(e) => handleSearchInputChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearch()
-                      }
-                    }}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                <div className="flex-1">
+                  <div className="relative search-container">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchInput}
+                      onChange={(e) => handleSearchInputChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSearch()
+                          setShowSuggestions(false)
+                        }
+                      }}
+                      onFocus={() => {
+                        if (searchSuggestions.length > 0) {
+                          setShowSuggestions(true)
+                        }
+                      }}
+                      onBlur={() => {
+                        // Delay hiding suggestions to allow clicking on them
+                        setTimeout(() => setShowSuggestions(false), 200)
+                      }}
+                      placeholder="Search products by name, SKU, or brand..."
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    {searchInput && (
+                      <button
+                        onClick={() => {
+                          setSearchInput("")
+                          setFilters(prev => ({ ...prev, search: "" }))
+                          setCurrentPage(1)
+                          setSearchSuggestions([])
+                          setShowSuggestions(false)
+                          setTimeout(() => {
+                            fetchProducts({ ...filters, search: "" }, advancedFilters, 1, pageSize)
+                          }, 100)
+                        }}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    
+                    {/* Search Suggestions Dropdown */}
+                    {showSuggestions && searchSuggestions.length > 0 && (
+                      <div className="absolute search-suggestions-dropdown w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="py-2">
+                          {searchSuggestions.map((product) => (
+                            <div
+                              key={product.id}
+                              onClick={() => {
+                                setSearchInput(product.name)
+                                setShowSuggestions(false)
+                                setSearchSuggestions([])
+                              }}
+                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center space-x-3"
+                            >
+                              <div className="flex-shrink-0">
+                                {product.image_url ? (
+                                  <img
+                                    src={product.image_url}
+                                    alt={product.name}
+                                    className="w-8 h-8 object-cover rounded border border-gray-200"
+                                    onError={(e) => {
+                                      e.target.src = '/placeholder.jpg'
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                                    <span className="text-gray-400 text-xs">No img</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-sm font-medium text-gray-900 truncate">
+                                    {product.name}
+                                  </h4>
+                                  <span className="text-sm text-gray-500 ml-2">
+                                    ${product.list_price || 'N/A'}
+                                  </span>
+                                </div>
+                                
+                                <div className="flex items-center justify-between mt-1">
+                                  <p className="text-xs text-gray-500 truncate">
+                                    SKU: {product.sku}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Stock: {product.stock || 0}
+                                  </p>
+                                </div>
+                                
+                                {product.vendor_name && (
+                                  <p className="text-xs text-blue-600 mt-1 truncate">
+                                    Vendor: {product.vendor_name}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button 
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={handleSearch}
-                >
-                  Search
-                </button>
+                                 <button 
+                   className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                   onClick={handleSearch}
+                 >
+                   Search
+                 </button>
+                 <button 
+                   className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                   onClick={() => {
+                     setEditingProduct(null)
+                     setShowProductModal(true)
+                   }}
+                   title="Quick Add Product"
+                 >
+                   <Plus className="w-4 h-4" />
+                 </button>
+                 {selectedProducts.length > 0 && (
+                   <button 
+                     className="px-4 py-2 border border-red-300 text-red-700 text-sm font-medium rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                     onClick={handleBulkDelete}
+                     title={`Delete ${selectedProducts.length} selected products`}
+                   >
+                     <Trash2 className="w-4 h-4" />
+                   </button>
+                 )}
               </div>
 
               {/* Quick Filters */}
@@ -1409,40 +1645,40 @@ const Products = () => {
                   ))}
                 </select>
 
-                <button
-                  className={`px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                    filters.vendor_id 
-                      ? 'text-gray-700 bg-white hover:bg-gray-50' 
-                      : 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                  }`}
-                  onClick={() => {
-                    if (filters.vendor_id) {
-                      setCategorySelectorType('vendor')
-                      setShowVendorCategorySelector(true)
-                    }
-                  }}
-                  disabled={!filters.vendor_id}
-                >
-                  {filters.vendor_category_ids.length > 0 
-                    ? `${filters.vendor_category_ids.length} Vendor Categories`
-                    : filters.vendor_id 
-                      ? "Select Vendor Categories"
-                      : "Select Vendor First"
-                  }
-                </button>
+                                 <button
+                   className={`px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                     filters.vendor_id 
+                       ? 'text-gray-700 bg-white hover:bg-gray-50' 
+                       : 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                   }`}
+                   onClick={() => {
+                     if (filters.vendor_id) {
+                       setCategorySelectorType('vendor')
+                       setShowVendorCategorySelector(true)
+                     }
+                   }}
+                   disabled={!filters.vendor_id}
+                 >
+                   {filters.vendor_category_ids.length > 0 
+                     ? `${filters.vendor_category_ids.length} Vendor Categories`
+                     : filters.vendor_id 
+                       ? `Select Vendor Categories (${categories.filter(cat => cat.type === 'vendor').length})`
+                       : "Select Vendor First"
+                   }
+                 </button>
 
-                <button
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() => {
-                    setCategorySelectorType('store')
-                    setShowStoreCategorySelector(true)
-                  }}
-                >
-                  {filters.store_category_ids.length > 0 
-                    ? `${filters.store_category_ids.length} Store Categories`
-                    : "Select Store Categories"
-                  }
-                </button>
+                                 <button
+                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                   onClick={() => {
+                     setCategorySelectorType('store')
+                     setShowStoreCategorySelector(true)
+                   }}
+                 >
+                   {filters.store_category_ids.length > 0 
+                     ? `${filters.store_category_ids.length} Store Categories`
+                     : `Select Store Categories (${categories.filter(cat => cat.type === 'store').length})`
+                   }
+                 </button>
 
                 <select
                   value={filters.stock_status}
@@ -1660,9 +1896,9 @@ const Products = () => {
         {filters.category_ids.length > 0 && (
           <div className="bg-blue-50 rounded-xl border border-blue-200 mb-6 p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-blue-900">Selected Categories:</span>
-                <div className="flex flex-wrap gap-2">
+              <div className="flex items-center space-x-2 flex-1">
+                <span className="text-sm font-medium text-blue-900 whitespace-nowrap">Selected Categories:</span>
+                <div className="flex flex-wrap gap-2 flex-1">
                   {filters.category_ids.map(categoryId => {
                     const category = flatCategories.find(cat => cat.id === categoryId)
                     return category ? (
@@ -1674,7 +1910,7 @@ const Products = () => {
                 </div>
               </div>
               <button 
-                className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors"
+                className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors ml-4"
                 onClick={() => handleCategorySelection([])}
               >
                 Clear All
@@ -1715,7 +1951,7 @@ const Products = () => {
         )}
 
         {/* Products Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 w-full">
           {loading ? (
             <div className="p-8 text-center">
               <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
@@ -1741,8 +1977,8 @@ const Products = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 table-fixed">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full divide-y divide-gray-200 table-fixed">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="w-12 px-6 py-3 text-left">

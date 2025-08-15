@@ -1172,7 +1172,13 @@ router.put("/:id", authenticateToken, async (req, res) => {
     }
 
     const currentCategory = existingCategory[0]
-    console.log("Updating category:", { id, currentParent: currentCategory.parent_id, newParent: parent_id })
+    console.log("Updating category:", { 
+      id, 
+      currentParent: currentCategory.parent_id, 
+      currentLevel: currentCategory.level,
+      newParent: parent_id,
+      preserveStructure: !parent_id || parent_id === "" || parent_id === null || parent_id === undefined
+    })
 
     // Check if parent category exists
     if (parent_id && parent_id !== "" && parent_id !== null && parent_id !== undefined) {
@@ -1232,12 +1238,13 @@ router.put("/:id", authenticateToken, async (req, res) => {
       // Update levels of all subcategories recursively
       await updateSubcategoryLevels(id, newLevel)
     } else {
-      // Root category
+      // Preserve existing parent_id and level when not explicitly provided
+      console.log("Preserving existing category structure - parent_id and level not provided in request")
       await db.execute(`
         UPDATE categories 
-        SET name = ?, type = ?, parent_id = ?, level = ?, status = ?
+        SET name = ?, type = ?, status = ?
         WHERE id = ?
-      `, [name, categoryType, null, 1, status || 'active', id])
+      `, [name, categoryType, status || 'active', id])
     }
 
     // Get updated category

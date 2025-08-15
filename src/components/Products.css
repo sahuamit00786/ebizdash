@@ -9,6 +9,29 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Search suggestions dropdown - ensure it's below modals */
+.search-suggestions-dropdown {
+  z-index: 10 !important;
+}
+
+/* When any modal is open, hide search suggestions and ensure proper layering */
+.modal-open .search-suggestions-dropdown {
+  display: none !important;
+}
+
+/* Ensure search container is below modals when modal is open */
+.modal-open .search-container {
+  z-index: 1 !important;
+}
+
+/* Hide search suggestions when any modal is open */
+.modal-open .search-suggestions-dropdown,
+.modal-open .search-container .absolute {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
 /* Header */
 .products-header {
   display: flex;

@@ -1,7 +1,7 @@
 /* Categories Container */
 .categories-container {
   padding: 24px;
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
   background: #f8f9fa;
   min-height: 100vh;
@@ -595,6 +595,13 @@
 .btn-sm {
   padding: 6px 10px;
   font-size: 12px;
+}
+
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 11px;
+  min-width: 24px;
+  height: 24px;
 }
 
 .btn-primary {

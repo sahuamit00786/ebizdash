@@ -231,7 +231,7 @@
 
 .product-info {
   flex: 1;
-  min-width: 0;
+  min-width: 200p;
 }
 
 .product-name {

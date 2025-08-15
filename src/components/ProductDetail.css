@@ -19,9 +19,9 @@
 
 .product-header-info {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 75%;
+  align-items: flex-start;
+  gap: 24px;
+  width: 85%;
 }
 
 .product-image {
@@ -29,17 +29,23 @@
 }
 
 .product-main-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 10px;
+  width: 250px !important;
+  height: 250px !important;
+  border-radius: 16px;
   object-fit: cover;
-  border: 1px solid #eee;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  border: 3px solid #eee;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-main-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .product-header-text {
   flex: 1;
-  min-width: 0;
+  min-width: 0 ;
 }
 
 .header-left h1 {
@@ -217,53 +223,110 @@
   align-items: center;
 }
 
-/* Rich Text Editor Styles */
+/* Enhanced Rich Text Editor Styles */
 .rich-text-editor-container {
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.rich-text-editor-container:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* View Mode Styles */
+.rich-text-editor-container.view-mode {
+  border-color: #d1d5db;
+  background-color: #fafafa;
+}
+
+.rich-text-editor-container.view-mode:focus-within {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.editor-toolbar.view-mode {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-bottom: 1px solid #d1d5db;
+}
+
+.mode-tab.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.view-mode .mode-tab.active {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  border-color: #6b7280;
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
 }
 
 .editor-toolbar {
-  background-color: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-bottom: 1px solid #ddd;
-  padding: 8px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .editor-mode-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 
 .mode-tab {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border: 1px solid #ddd;
   background-color: white;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .mode-tab:hover {
   background-color: #f0f0f0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .mode-tab.active {
-  background-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.editor-info {
+  display: flex;
+  align-items: center;
+}
+
+.editor-tip {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
 }
 
 .rich-text-editor {
-  min-height: 200px;
+  min-height: 250px;
 }
 
 .rich-text-editor .ql-editor {
-  min-height: 180px;
+  min-height: 220px;
   font-size: 14px;
   line-height: 1.6;
+  padding: 16px;
 }
 
 .rich-text-editor .ql-toolbar {
@@ -271,34 +334,109 @@
   border-left: none;
   border-right: none;
   border-bottom: 1px solid #ddd;
-  background-color: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 8px;
 }
 
 .rich-text-editor .ql-container {
   border: none;
+  font-family: inherit;
+}
+
+/* View Mode React Quill Styles */
+.rich-text-editor.view-mode {
+  min-height: 200px;
+}
+
+.rich-text-editor.view-mode .ql-editor {
+  min-height: 180px;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 16px;
+  background-color: #fafafa;
+  color: #374151;
+}
+
+.rich-text-editor.view-mode .ql-toolbar {
+  display: none; /* Hide toolbar in view mode */
+}
+
+.rich-text-editor.view-mode .ql-container {
+  border: none;
+  background-color: #fafafa;
+}
+
+/* Empty state for view mode */
+.rich-text-editor.view-mode .ql-editor:empty::before {
+  content: "No description available";
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Enhanced Quill toolbar styling */
+.ql-snow .ql-toolbar {
+  border-color: #ddd;
+}
+
+.ql-snow .ql-toolbar button {
+  color: #333;
+}
+
+.ql-snow .ql-toolbar button:hover {
+  color: #667eea;
+}
+
+.ql-snow .ql-toolbar button.ql-active {
+  color: #667eea;
+}
+
+.ql-snow .ql-toolbar .ql-stroke {
+  stroke: currentColor;
+}
+
+.ql-snow .ql-toolbar .ql-fill {
+  fill: currentColor;
 }
 
 .code-editor {
   width: 100%;
-  min-height: 200px;
-  padding: 12px;
+  min-height: 250px;
+  padding: 16px;
   border: none;
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
   background-color: #f8f9fa;
   color: #333;
   resize: vertical;
+  border-radius: 0;
+  transition: all 0.3s ease;
 }
 
 .code-editor:focus {
   outline: none;
   background-color: white;
+  box-shadow: inset 0 0 0 2px #667eea;
+}
+
+.code-editor::placeholder {
+  color: #999;
+  font-style: italic;
 }
 
 .rich-text-display {
-  min-height: 100px;
+  min-height: 120px;
   line-height: 1.6;
+  padding: 16px;
+  background-color: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.rich-text-display:empty::before {
+  content: "No description available";
+  color: #999;
+  font-style: italic;
 }
 
 .rich-text-display h1,
@@ -307,34 +445,83 @@
 .rich-text-display h4,
 .rich-text-display h5,
 .rich-text-display h6 {
-  margin: 10px 0 5px 0;
+  margin: 16px 0 8px 0;
   font-weight: 600;
+  color: #333;
 }
 
+.rich-text-display h1 { font-size: 24px; }
+.rich-text-display h2 { font-size: 20px; }
+.rich-text-display h3 { font-size: 18px; }
+.rich-text-display h4 { font-size: 16px; }
+.rich-text-display h5 { font-size: 14px; }
+.rich-text-display h6 { font-size: 12px; }
+
 .rich-text-display p {
-  margin: 8px 0;
+  margin: 12px 0;
+  color: #444;
 }
 
 .rich-text-display ul,
 .rich-text-display ol {
-  margin: 8px 0;
-  padding-left: 20px;
+  margin: 12px 0;
+  padding-left: 24px;
 }
 
 .rich-text-display li {
-  margin: 4px 0;
+  margin: 6px 0;
+  color: #444;
 }
 
 .rich-text-display a {
   color: #667eea;
   text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.rich-text-display a:hover {
+  color: #5a67d8;
 }
 
 .rich-text-display img {
   max-width: 100%;
   height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rich-text-display blockquote {
+  border-left: 4px solid #667eea;
+  margin: 16px 0;
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  font-style: italic;
+  color: #666;
+}
+
+.rich-text-display code {
+  background-color: #f1f3f4;
+  padding: 2px 6px;
   border-radius: 4px;
-  margin: 8px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #d73a49;
+}
+
+.rich-text-display pre {
+  background-color: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.rich-text-display pre code {
+  background: none;
+  padding: 0;
+  color: #333;
 }
 
 /* Status badges */
@@ -487,6 +674,11 @@
 
 /* Responsive design */
 @media (max-width: 1024px) {
+  .product-main-image {
+    width: 500px;
+    height: 500px;
+  }
+  
   .form-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
@@ -509,13 +701,26 @@
     padding: 15px;
   }
 
+  .product-header-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  .product-main-image {
+    width: 300px;
+    height: 300px;
+    margin-bottom: 16px;
+  }
+
   .header-actions {
     justify-content: center;
   }
 
   .product-meta {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 4px;
   }
 
@@ -544,17 +749,43 @@
   }
 
   .rich-text-editor {
-    min-height: 150px;
+    min-height: 200px;
   }
 
   .rich-text-editor .ql-editor {
-    min-height: 130px;
+    min-height: 180px;
+    padding: 12px;
+  }
+
+  .rich-text-editor.view-mode .ql-editor {
+    min-height: 160px;
+    padding: 12px;
+  }
+
+  .editor-toolbar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .editor-info {
+    justify-content: center;
+  }
+
+  .code-editor {
+    min-height: 200px;
+    padding: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .header-left h1 {
     font-size: 20px;
+  }
+
+  .product-main-image {
+    width: 200px;
+    height: 200px;
   }
 
   .product-section {

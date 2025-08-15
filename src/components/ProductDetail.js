@@ -27,23 +27,16 @@ const ProductDetail = () => {
   const { user } = useAuth()
   const { showToast } = useToast()
 
-  // Quill editor modules and formats
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'align': [] }],
-      ['link', 'image'],
-      ['clean']
-    ],
-  }
+
 
   const quillFormats = [
-    'header', 'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'color', 'background', 'align',
-    'link', 'image'
+    'header', 'font', 'size',
+    'bold', 'italic', 'underline', 'strike', 'blockquote',
+    'list', 'bullet', 'indent',
+    'link', 'image', 'video',
+    'color', 'background',
+    'align', 'direction',
+    'code-block', 'script'
   ]
 
   // Fetch product data
@@ -118,6 +111,14 @@ const ProductDetail = () => {
     fetchCategories()
   }, [fetchProduct, fetchVendors, fetchCategories])
 
+  // Reset editor modes when editing starts
+  useEffect(() => {
+    if (editing) {
+      setDescriptionMode('visual')
+      setFullDescriptionMode('visual')
+    }
+  }, [editing])
+
   const handleInputChange = (field, value) => {
     let processedValue = value
     
@@ -138,6 +139,33 @@ const ProductDetail = () => {
       ...prev,
       [field]: processedValue
     }))
+  }
+
+  // Enhanced Quill modules with better initialization
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'script': 'sub'}, { 'script': 'super' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'direction': 'rtl' }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'font': [] }],
+      [{ 'align': [] }],
+      ['blockquote', 'code-block'],
+      ['link', 'image', 'video'],
+      ['clean']
+    ],
+    clipboard: {
+      matchVisual: false,
+    },
+    history: {
+      delay: 2000,
+      maxStack: 500,
+      userOnly: true
+    }
   }
 
   const handleSave = async () => {
@@ -231,8 +259,35 @@ const ProductDetail = () => {
   const renderDescriptionEditor = (field, mode, setMode, value, onChange) => {
     if (!editing) {
       return (
-        <div className="form-display rich-text-display" 
-             dangerouslySetInnerHTML={{ __html: value || "No description" }} />
+        <div className="rich-text-editor-container view-mode">
+          <div className="editor-toolbar view-mode">
+            <div className="editor-mode-tabs">
+              <span className="mode-tab active">
+                📖 View Mode
+              </span>
+            </div>
+            <div className="editor-info">
+              <span className="editor-tip">
+                Rich text content display
+              </span>
+            </div>
+          </div>
+          <ReactQuill
+            value={value || ''}
+            onChange={() => {}} // Read-only
+            modules={{
+              toolbar: false, // Hide toolbar in view mode
+              clipboard: {
+                matchVisual: false,
+              }
+            }}
+            formats={quillFormats}
+            className="rich-text-editor view-mode"
+            theme="snow"
+            preserveWhitespace={true}
+            readOnly={true}
+          />
+        </div>
       )
     }
 
@@ -241,36 +296,47 @@ const ProductDetail = () => {
         <div className="editor-toolbar">
           <div className="editor-mode-tabs">
             <button
+              type="button"
               className={`mode-tab ${mode === 'visual' ? 'active' : ''}`}
               onClick={() => setMode('visual')}
             >
-              Visual
+              ✏️ Visual Editor
             </button>
             <button
+              type="button"
               className={`mode-tab ${mode === 'code' ? 'active' : ''}`}
               onClick={() => setMode('code')}
             >
-              Code
+              💻 HTML Code
             </button>
+          </div>
+          <div className="editor-info">
+            <span className="editor-tip">
+              {mode === 'visual' ? 'Use the toolbar above to format your content' : 'Edit HTML directly for advanced formatting'}
+            </span>
           </div>
         </div>
         
         {mode === 'visual' ? (
           <ReactQuill
+            key={`${field}-${editing}-${mode}`} // Force re-render when editing starts
             value={value || ''}
             onChange={onChange}
             modules={quillModules}
             formats={quillFormats}
-            placeholder="Enter description..."
+            placeholder={field === 'short_description' ? "Enter a brief product description..." : "Enter detailed product description..."}
             className="rich-text-editor"
+            theme="snow"
+            preserveWhitespace={true}
           />
         ) : (
           <textarea
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             className="code-editor"
-            placeholder="Enter HTML code..."
-            rows="8"
+            placeholder={field === 'short_description' ? "Enter HTML for short description..." : "Enter HTML for full description..."}
+            rows="12"
+            spellCheck="false"
           />
         )}
       </div>

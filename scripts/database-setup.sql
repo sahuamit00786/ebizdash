@@ -68,6 +68,7 @@ CREATE TABLE products (
     meta_title VARCHAR(255),
     meta_description TEXT,
     meta_keywords VARCHAR(500),
+    image_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE SET NULL,
